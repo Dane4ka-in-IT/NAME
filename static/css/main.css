@@ -1,0 +1,122 @@
+/* General styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
+}
+
+/* Card styles */
+.card {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+/* Test taking interface */
+.sortable-ghost {
+    opacity: 0.5;
+}
+
+#sortable-list li {
+    cursor: grab;
+}
+
+#sortable-list li:active {
+    cursor: grabbing;
+}
+
+#sortable-list li .fa-grip-lines {
+    color: #ccc;
+}
+
+/* Progress bar animation */
+.progress-bar {
+    transition: width 0.3s ease;
+}
+
+/* Question highlighting */
+.question-highlight {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 5px;
+    border-left: 4px solid #0d6efd;
+}
+
+/* Badge styles */
+.badge.bg-secondary {
+    font-weight: normal;
+}
+
+/* Results page */
+.correct-answer {
+    color: #198754;
+}
+
+.incorrect-answer {
+    color: #dc3545;
+}
+
+/* Home page */
+.jumbotron {
+    border-radius: 10px;
+    margin-bottom: 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+    
+    .card-title {
+        font-size: 1.1rem;
+    }
+    
+    .jumbotron h1 {
+        font-size: 2rem;
+    }
+}
+
+/* Form elements */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none;
+    }
+    
+    .card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+} 
