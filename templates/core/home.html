@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Главная | Подготовка к экзаменам{% endblock %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded">
+    <h1 class="display-4">Подготовка к экзаменам</h1>
+    <p class="lead">Платформа для подготовки к экзаменам по предметам "Фундаментальная информатика" и "Алгоритмы и структуры данных".</p>
+    <hr class="my-4">
+    <p>Выберите предмет, чтобы начать тестирование, или просмотрите все доступные тесты.</p>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary btn-lg" href="{% url 'test_list' %}" role="button">Все тесты</a>
+        {% if user.is_authenticated %}
+            <a class="btn btn-outline-primary btn-lg" href="{% url 'dashboard' %}" role="button">Личный кабинет</a>
+        {% else %}
+            <a class="btn btn-outline-primary btn-lg" href="{% url 'login' %}" role="button">Войти</a>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="my-4">Предметы</h2>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for subject in subjects %}
+        <div class="col">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ subject.name }}</h5>
+                    <p class="card-text">
+                        {% with test_count=subject.tests.filter.count %}
+                            {{ test_count }} тест{{ test_count|pluralize:"ов" }}
+                        {% endwith %}
+                    </p>
+                    <a href="#" class="btn btn-primary">Просмотр тестов</a>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Пока нет доступных предметов. Пожалуйста, проверьте позже.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+{% if user.is_authenticated %}
+    <div class="mt-5">
+        <h2 class="mb-4">Недавние тесты</h2>
+        {% if user.test_sessions.exists %}
+            <div class="list-group">
+                {% for session in user.test_sessions.all|slice:":5" %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{ session.test.title }}</h5>
+                            <small>{{ session.start_time|date:"d.m.Y H:i" }}</small>
+                        </div>
+                        <p class="mb-1">{{ session.test.subject.name }}</p>
+                        <small>
+                            {% if session.is_completed %}
+                                Завершен
+                            {% else %}
+                                В процессе
+                            {% endif %}
+                        </small>
+                    </a>
+                {% endfor %}
+            </div>
+            <div class="text-end mt-2">
+                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                У вас пока нет пройденных тестов. <a href="{% url 'test_list' %}">Начать тестирование</a>
+            </div>
+        {% endif %}
+    </div>
+{% endif %}
+{% endblock %} 
