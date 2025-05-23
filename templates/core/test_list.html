@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Тесты | Подготовка к экзаменам{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Тесты</li>
+    </ol>
+</nav>
+
+<h1 class="mb-4">Доступные тесты</h1>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="input-group">
+            <input type="text" id="search-input" class="form-control" placeholder="Поиск тестов...">
+            <button class="btn btn-outline-secondary" type="button" id="search-button">
+                <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <select id="subject-filter" class="form-select">
+            <option value="">Все предметы</option>
+            {% for test in tests %}
+                <option value="{{ test.subject.id }}">{{ test.subject.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4" id="test-cards">
+    {% for test in tests %}
+        <div class="col test-card" data-subject="{{ test.subject.id }}">
+            <div class="card h-100">
+                <div class="card-header">
+                    <span class="badge bg-secondary">{{ test.subject.name }}</span>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">{{ test.title }}</h5>
+                    <p class="card-text">{{ test.description|truncatewords:20 }}</p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            Создан: {{ test.created_at|date:"d.m.Y" }}
+                        </small>
+                    </p>
+                </div>
+                <div class="card-footer bg-transparent border-top-0">
+                    <div class="btn-group w-100">
+                        <a href="{% url 'start_test' test.id %}" class="btn btn-primary">Начать тест</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Пока нет доступных тестов. Пожалуйста, проверьте позже.
+            </div>
+        </div>
+    {% endfor %}
+</div>
+
+<div class="alert alert-info d-none" id="no-results">
+    По вашему запросу не найдено ни одного теста. Попробуйте изменить параметры поиска.
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Назад на главную</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/test_selection.js"></script>
+{% endblock %} 
