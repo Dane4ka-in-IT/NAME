@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.views.generic import ListView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.utils import timezone
 import random
 
 from .models import Subject, Test, Question, Choice, UserTestSession, UserAnswer
@@ -102,6 +103,18 @@ def question_view(request, session_id):
         
         if question.question_type == 'MC':
             selected_choice_ids = request.POST.getlist('choice')
+            
+            if not selected_choice_ids:
+                return render(request, 'core/question.html', {
+                    'session': session,
+                    'test': test,
+                    'question': question,
+                    'choices': choices,
+                    'current_index': session.current_question_index + 1,
+                    'total_questions': len(session.question_order),
+                    'error_message': 'Пожалуйста, выберите хотя бы один вариант ответа.'
+                })
+                
             selected_choices = Choice.objects.filter(id__in=selected_choice_ids)
             
             correct_choices = Choice.objects.filter(question=question, is_correct=True)
@@ -124,6 +137,17 @@ def question_view(request, session_id):
         elif question.question_type == 'OA':
             submitted_text = request.POST.get('answer', '').strip()
             
+            if not submitted_text:
+                return render(request, 'core/question.html', {
+                    'session': session,
+                    'test': test,
+                    'question': question,
+                    'choices': choices,
+                    'current_index': session.current_question_index + 1,
+                    'total_questions': len(session.question_order),
+                    'error_message': 'Пожалуйста, введите ваш ответ.'
+                })
+            
             is_correct = True
             score_earned = question.points
             
@@ -138,6 +162,18 @@ def question_view(request, session_id):
             
         elif question.question_type == 'ORD':
             ordered_choice_ids = request.POST.getlist('ordered_choice')
+            
+            if len(ordered_choice_ids) != Choice.objects.filter(question=question).count():
+                return render(request, 'core/question.html', {
+                    'session': session,
+                    'test': test,
+                    'question': question,
+                    'choices': choices,
+                    'current_index': session.current_question_index + 1,
+                    'total_questions': len(session.question_order),
+                    'error_message': 'Ошибка при сохранении порядка. Пожалуйста, попробуйте еще раз.'
+                })
+                
             ordered_choices = [int(choice_id) for choice_id in ordered_choice_ids]
             
             correct_order = list(Choice.objects.filter(question=question)
@@ -181,6 +217,27 @@ def end_test(request, session_id):
     
     if not session.is_completed:
         session.is_completed = True
+        session.end_time = timezone.now()
         session.save()
     
-    return redirect('dashboard') 
+    answers = UserAnswer.objects.filter(
+        user=request.user,
+        test=session.test,
+        timestamp__gte=session.start_time,
+        timestamp__lte=session.end_time or timezone.now()
+    )
+    
+    total_score = sum(answer.score_earned for answer in answers)
+    total_possible = sum(Question.objects.get(id=q_id).points 
+                       for q_id in session.question_order)
+    
+    percentage = (total_score / total_possible * 100) if total_possible > 0 else 0
+    
+    return render(request, 'core/results.html', {
+        'session': session,
+        'test': session.test,
+        'answers': answers,
+        'total_score': total_score,
+        'total_possible': total_possible,
+        'percentage': percentage
+    }) 
