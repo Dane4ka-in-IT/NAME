@@ -4,6 +4,7 @@ from django.utils.translation import gettext_lazy as _
 
 from .models import CustomUser
 
+
 class CustomUserCreationForm(UserCreationForm):
     email = forms.EmailField(
         label=_('Электронная почта'),
@@ -30,6 +31,7 @@ class CustomUserCreationForm(UserCreationForm):
         model = CustomUser
         fields = ('email', 'username', 'name', 'password1', 'password2')
 
+
 class CustomAuthenticationForm(AuthenticationForm):
     username = forms.CharField(
         label=_('Электронная почта / Имя пользователя'),
@@ -42,4 +44,4 @@ class CustomAuthenticationForm(AuthenticationForm):
 
     class Meta:
         model = CustomUser
-        fields = ('username', 'password') 
+        fields = ('username', 'password')
