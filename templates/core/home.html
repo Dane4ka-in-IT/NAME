@@ -11,7 +11,7 @@
     <div class="d-flex gap-2">
         <a class="btn btn-primary btn-lg" href="{% url 'test_list' %}" role="button">Все тесты</a>
         {% if user.is_authenticated %}
-            <a class="btn btn-outline-primary btn-lg" href="{% url 'dashboard' %}" role="button">Личный кабинет</a>
+            <a class="btn btn-outline-primary btn-lg" href="{% url 'manage_dashboard' %}" role="button">Личный кабинет</a>
         {% else %}
             <a class="btn btn-outline-primary btn-lg" href="{% url 'login' %}" role="button">Войти</a>
         {% endif %}
@@ -67,7 +67,7 @@
                 {% endfor %}
             </div>
             <div class="text-end mt-2">
-                <a href="{% url 'dashboard' %}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
+                <a href="{% url 'manage_dashboard' %}" class="btn btn-sm btn-outline-primary">Посмотреть все</a>
             </div>
         {% else %}
             <div class="alert alert-info">
