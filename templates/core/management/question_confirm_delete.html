@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление вопроса | {{ test.title }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'manage_dashboard' %}">Управление</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'manage_questions' test.id %}">Вопросы: {{ test.title }}</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Удаление вопроса</li>
+    </ol>
+</nav>
+
+<div class="card">
+    <div class="card-header bg-danger text-white">
+        <h3 class="mb-0">Удаление вопроса</h3>
+    </div>
+    <div class="card-body">
+        <p class="lead">Вы уверены, что хотите удалить следующий вопрос?</p>
+        
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">{{ question.text }}</h5>
+                <p class="card-text">
+                    <span class="badge bg-secondary me-2">
+                        {% if question.question_type == 'MC' %}
+                            Множественный выбор
+                        {% elif question.question_type == 'OA' %}
+                            Открытый ответ
+                        {% elif question.question_type == 'ORD' %}
+                            Упорядочивание
+                        {% endif %}
+                    </span>
+                    <span class="badge bg-info">{{ question.points }} балл{% if question.points > 1 %}ов{% endif %}</span>
+                </p>
+                
+                {% if question.question_type in 'MC,ORD' and question.choices.exists %}
+                    <div class="mt-2">
+                        <strong>Варианты ответов:</strong>
+                        <ul class="mt-2">
+                            {% for choice in question.choices.all %}
+                                <li>
+                                    {% if question.question_type == 'MC' %}
+                                        {% if choice.is_correct %}
+                                            <i class="fas fa-check-circle text-success"></i>
+                                        {% else %}
+                                            <i class="fas fa-times-circle text-danger"></i>
+                                        {% endif %}
+                                    {% elif question.question_type == 'ORD' %}
+                                        <span class="badge bg-secondary me-1">{{ choice.order_index }}</span>
+                                    {% endif %}
+                                    {{ choice.text }}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <p class="text-danger">Это действие невозможно отменить. Вопрос и все связанные с ним варианты ответов будут удалены.</p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="d-flex justify-content-between mt-4">
+                <a href="{% url 'manage_questions' test.id %}" class="btn btn-outline-secondary">Отмена</a>
+                <button type="submit" class="btn btn-danger">Подтвердить удаление</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %} 

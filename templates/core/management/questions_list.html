@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление вопросами | {{ test.title }}{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'home' %}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'manage_dashboard' %}">Управление</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Вопросы: {{ test.title }}</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Вопросы теста: {{ test.title }}</h1>
+    <a href="{% url 'question_create' test.id %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Добавить вопрос
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Список вопросов ({{ questions.count }})</h5>
+        {% if questions.exists %}
+            <button id="reorder-mode-btn" class="btn btn-sm btn-light">
+                <i class="fas fa-sort"></i> Режим сортировки
+            </button>
+        {% endif %}
+    </div>
+    <div class="card-body">
+        {% if questions.exists %}
+            <ul class="list-group" id="questions-list">
+                {% for question in questions %}
+                    <li class="list-group-item" data-id="{{ question.id }}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="question-handle me-2 d-none">
+                                    <i class="fas fa-grip-vertical"></i>
+                                </span>
+                                <span class="badge bg-primary me-2">{{ forloop.counter }}</span>
+                                <span class="badge bg-secondary me-2">
+                                    {% if question.question_type == 'MC' %}
+                                        Множественный выбор
+                                    {% elif question.question_type == 'OA' %}
+                                        Открытый ответ
+                                    {% elif question.question_type == 'ORD' %}
+                                        Упорядочивание
+                                    {% endif %}
+                                </span>
+                                <span class="badge bg-info me-2">{{ question.points }} балл{% if question.points > 1 %}ов{% endif %}</span>
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{% url 'question_update' question.id %}" class="btn btn-warning">
+                                    <i class="fas fa-edit"></i> Изменить
+                                </a>
+                                <a href="{% url 'question_delete' question.id %}" class="btn btn-danger">
+                                    <i class="fas fa-trash"></i> Удалить
+                                </a>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <strong>Вопрос:</strong> {{ question.text }}
+                        </div>
+                        {% if question.question_type in 'MC,ORD' %}
+                            <div class="mt-2">
+                                <strong>Варианты ответов:</strong>
+                                <ul class="list-unstyled ms-3">
+                                    {% for choice in question.choices.all %}
+                                        <li>
+                                            {% if question.question_type == 'MC' %}
+                                                {% if choice.is_correct %}
+                                                    <i class="fas fa-check-circle text-success"></i>
+                                                {% else %}
+                                                    <i class="fas fa-times-circle text-danger"></i>
+                                                {% endif %}
+                                            {% elif question.question_type == 'ORD' %}
+                                                <span class="badge bg-secondary">{{ choice.order_index }}</span>
+                                            {% endif %}
+                                            {{ choice.text }}
+                                        </li>
+                                    {% empty %}
+                                        <li class="text-muted">Нет вариантов ответа</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="alert alert-info">
+                В этом тесте пока нет вопросов. Нажмите кнопку "Добавить вопрос", чтобы создать первый вопрос.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'manage_dashboard' %}" class="btn btn-outline-secondary">Назад к списку тестов</a>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if questions.exists %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const reorderModeBtn = document.getElementById('reorder-mode-btn');
+    const questionsList = document.getElementById('questions-list');
+    const questionHandles = document.querySelectorAll('.question-handle');
+    let sortable = null;
+    
+    reorderModeBtn.addEventListener('click', function() {
+        const isReorderMode = reorderModeBtn.classList.contains('btn-warning');
+        
+        if (isReorderMode) {
+            reorderModeBtn.classList.remove('btn-warning');
+            reorderModeBtn.classList.add('btn-light');
+            reorderModeBtn.innerHTML = '<i class="fas fa-sort"></i> Режим сортировки';
+            
+            sortable.destroy();
+            sortable = null;
+            
+            questionHandles.forEach(handle => {
+                handle.classList.add('d-none');
+            });
+            
+            const questionIds = Array.from(questionsList.querySelectorAll('li')).map(li => li.dataset.id);
+            
+            fetch(`{% url 'question_reorder' test.id %}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    question_order: questionIds
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const items = questionsList.querySelectorAll('li');
+                    items.forEach((item, index) => {
+                        const badge = item.querySelector('.badge.bg-primary');
+                        badge.textContent = index + 1;
+                    });
+                }
+            });
+        } else {
+            reorderModeBtn.classList.remove('btn-light');
+            reorderModeBtn.classList.add('btn-warning');
+            reorderModeBtn.innerHTML = '<i class="fas fa-save"></i> Сохранить порядок';
+            
+            questionHandles.forEach(handle => {
+                handle.classList.remove('d-none');
+            });
+            
+            sortable = new Sortable(questionsList, {
+                handle: '.question-handle',
+                animation: 150
+            });
+        }
+    });
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endif %}
+{% endblock %} 

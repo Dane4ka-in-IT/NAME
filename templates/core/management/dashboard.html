@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Управление тестами | Подготовка к экзаменам{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Панель управления тестами</h1>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Создать новый предмет</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{% url 'subject_create' %}">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" name="name" class="form-control" placeholder="Название предмета" required>
+                        <button type="submit" class="btn btn-primary">Создать</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Создать новый тест</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'test_create' %}" class="btn btn-primary d-block">Создать тест</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info mb-4">
+    <h5><i class="fas fa-info-circle"></i> Подсказка</h5>
+    <p class="mb-0">Новые тесты создаются в статусе <span class="badge bg-secondary">Черновик</span>. Чтобы опубликовать тест и сделать его доступным для студентов, нажмите кнопку <i class="fas fa-edit"></i> <strong>Изменить</strong> и установите флажок <strong>"Опубликован"</strong>.</p>
+</div>
+
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Мои тесты</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>Название</th>
+                        <th>Предмет</th>
+                        <th>Кол-во вопросов</th>
+                        <th>Статус</th>
+                        <th>Создан</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for test in tests %}
+                        <tr>
+                            <td>{{ test.title }}</td>
+                            <td>{{ test.subject.name }}</td>
+                            <td>{{ test.questions.count }}</td>
+                            <td>
+                                {% if test.is_published %}
+                                    <span class="badge bg-success">Опубликован</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Черновик</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ test.created_at|date:"d.m.Y" }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'manage_questions' test.id %}" class="btn btn-primary">
+                                        <i class="fas fa-list"></i> Вопросы
+                                    </a>
+                                    <a href="{% url 'test_update' test.id %}" class="btn btn-warning">
+                                        <i class="fas fa-edit"></i> Изменить
+                                    </a>
+                                    <a href="{% url 'test_delete' test.id %}" class="btn btn-danger">
+                                        <i class="fas fa-trash"></i> Удалить
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">У вас пока нет созданных тестов</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'home' %}" class="btn btn-outline-secondary">Вернуться на главную</a>
+</div>
+{% endblock %} 
